@@ -1,0 +1,263 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  student
+  admin
+}
+
+enum AssignmentStatus {
+  draft
+  active
+  submitted
+}
+
+enum UsagePurpose {
+  brainstorming
+  outlining
+  coding_help
+  proofreading
+  translation
+  concept_explanation
+  other
+}
+
+enum ScopeType {
+  institution
+  course
+  assignment
+}
+
+enum GuidelineSetStatus {
+  draft
+  published
+  archived
+}
+
+enum GuidelineSourceType {
+  seed
+  manual
+  sync
+}
+
+enum RuleSeverity {
+  info
+  warning
+  high
+}
+
+enum ComplianceResult {
+  ok
+  warning
+}
+
+model Institution {
+  id           String              @id @default(cuid())
+  name         String
+  code         String              @unique
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  users        User[]
+  courses      Course[]
+  assignments  Assignment[]
+  aiLogs       AIInteractionLog[]
+  guidelineSets GuidelineSet[]
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  institutionId         String
+  institution           Institution            @relation(fields: [institutionId], references: [id])
+  email                 String
+  passwordHash          String
+  role                  Role                   @default(student)
+  isActive              Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  sessions              Session[]
+  assignments           Assignment[]           @relation("StudentAssignments")
+  aiLogs                AIInteractionLog[]     @relation("StudentAILogs")
+  privacySetting        StudentPrivacySetting?
+  declarations          Declaration[]
+
+  @@unique([institutionId, email])
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  refreshTokenHash String
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime @default(now())
+}
+
+model Course {
+  id            String       @id @default(cuid())
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id])
+  code          String
+  name          String
+  term          String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  assignments   Assignment[]
+  guidelineSets GuidelineSet[]
+
+  @@unique([institutionId, code, term])
+}
+
+model Assignment {
+  id                      String              @id @default(cuid())
+  institutionId           String
+  institution             Institution         @relation(fields: [institutionId], references: [id])
+  courseId                String
+  course                  Course              @relation(fields: [courseId], references: [id])
+  studentId               String
+  student                 User                @relation("StudentAssignments", fields: [studentId], references: [id])
+  title                   String
+  dueDate                 DateTime
+  status                  AssignmentStatus    @default(draft)
+  storeRawPromptsOverride Boolean?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  deletedAt               DateTime?
+  aiLogs                  AIInteractionLog[]
+  complianceChecks        ComplianceCheck[]
+  declarations            Declaration[]
+
+  @@index([institutionId, studentId])
+}
+
+model AIInteractionLog {
+  id                String       @id @default(cuid())
+  institutionId     String
+  institution       Institution  @relation(fields: [institutionId], references: [id])
+  assignmentId      String
+  assignment        Assignment   @relation(fields: [assignmentId], references: [id])
+  studentId         String
+  student           User         @relation("StudentAILogs", fields: [studentId], references: [id])
+  toolName          String
+  model             String?
+  usagePurpose      UsagePurpose
+  promptRaw         String?
+  responseSummary   String
+  studentReflection String?
+  rawPromptStored   Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+
+  @@index([assignmentId, studentId])
+}
+
+model GuidelineSet {
+  id            String              @id @default(cuid())
+  institutionId String
+  institution   Institution         @relation(fields: [institutionId], references: [id])
+  scopeType     ScopeType
+  courseId      String?
+  course        Course?             @relation(fields: [courseId], references: [id])
+  assignmentId  String?
+  version       Int
+  status        GuidelineSetStatus  @default(draft)
+  sourceType    GuidelineSourceType @default(seed)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  rules         GuidelineRule[]
+  complianceChecks ComplianceCheck[]
+
+  @@index([institutionId, scopeType, status])
+}
+
+model GuidelineRule {
+  id            String       @id @default(cuid())
+  guidelineSetId String
+  guidelineSet  GuidelineSet @relation(fields: [guidelineSetId], references: [id])
+  ruleCode      String
+  title         String
+  description   String
+  severity      RuleSeverity
+  conditionJson Json
+  adviceText    String
+  createdAt     DateTime     @default(now())
+
+  @@unique([guidelineSetId, ruleCode])
+}
+
+model ComplianceCheck {
+  id            String           @id @default(cuid())
+  institutionId String
+  assignmentId  String
+  assignment    Assignment       @relation(fields: [assignmentId], references: [id])
+  studentId     String
+  guidelineSetId String
+  guidelineSet  GuidelineSet     @relation(fields: [guidelineSetId], references: [id])
+  result        ComplianceResult
+  findingsJson  Json
+  runAt         DateTime         @default(now())
+}
+
+model Declaration {
+  id            String     @id @default(cuid())
+  institutionId String
+  assignmentId  String
+  assignment    Assignment @relation(fields: [assignmentId], references: [id])
+  studentId     String
+  student       User       @relation(fields: [studentId], references: [id])
+  version       Int
+  payloadJson   Json
+  pdfUrlOrPath  String
+  createdAt     DateTime   @default(now())
+}
+
+model StudentPrivacySetting {
+  id                     String   @id @default(cuid())
+  institutionId          String
+  studentId              String   @unique
+  student                User     @relation(fields: [studentId], references: [id])
+  storeRawPromptsDefault Boolean  @default(false)
+  rawPromptRetentionDays Int      @default(180)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model ConsentRecord {
+  id            String   @id @default(cuid())
+  institutionId String
+  studentId     String
+  consentType   String
+  granted       Boolean
+  grantedAt     DateTime @default(now())
+}
+
+model RetentionJobRun {
+  id          String   @id @default(cuid())
+  status      String
+  startedAt   DateTime @default(now())
+  finishedAt  DateTime?
+  deletedCount Int     @default(0)
+  error       String?
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  institutionId String
+  actorUserId String
+  eventType   String
+  targetType  String
+  targetId    String?
+  metadataJson Json?
+  createdAt   DateTime @default(now())
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.turbo/
+.pnpm-store/
+.env
+tmp/
+coverage/
+apps/api/prisma/dev.db
+infra/docker/postgres/data/

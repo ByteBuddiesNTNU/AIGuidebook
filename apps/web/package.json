@@ -1,0 +1,29 @@
+{
+  "name": "@aiguidebook/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "echo 'no lint configured'",
+    "test": "echo 'no tests configured'"
+  },
+  "dependencies": {
+    "@aiguidebook/shared": "workspace:*",
+    "@tanstack/react-query": "^5.66.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.2.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}
