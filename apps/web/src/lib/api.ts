@@ -1,3 +1,26 @@
+import type {
+  ActiveGuidelineSetDto,
+  AiLogListItemDto,
+  AssignmentIdResponse,
+  AssignmentListItemDto,
+  AuthResponseDto,
+  AuthUserDto,
+  ComplianceCheckDto,
+  CourseDto,
+  CreateAiLogRequest,
+  CreateAssignmentRequest,
+  CreateGuidelineSetRequest,
+  DeclarationSummaryDto,
+  GuidelineSetSummaryDto,
+  InstitutionDto,
+  LoginRequest,
+  PrivacySettingsDto,
+  RegisterRequest,
+  UpdatePrivacySettingsRequest,
+  UsageByCategoryPointDto,
+  UsageOverTimePointDto,
+} from "@aiguidebook/shared";
+
 type Envelope<T> = { data: T; error: { code: string; message: string } | null };
 
 const BASE_URL = "http://localhost:3000/api/v1";
@@ -72,33 +95,24 @@ function authHeader(token: string | null): Record<string, string> {
 
 export const api = {
   getInstitutions() {
-    return req<Array<{ id: string; name: string; code: string }>>("/institutions");
+    return req<InstitutionDto[]>("/institutions");
   },
-  register(input: { institutionId: string; email: string; password: string }) {
-    return req<{ accessToken: string; user: { id: string; email: string; role: "student" | "admin"; institutionId: string } }>(
-      "/auth/register",
-      { method: "POST", body: JSON.stringify(input) },
-    );
+  register(input: RegisterRequest) {
+    return req<AuthResponseDto>("/auth/register", { method: "POST", body: JSON.stringify(input) });
   },
-  login(input: { email: string; password: string }) {
-    return req<{ accessToken: string; user: { id: string; email: string; role: "student" | "admin"; institutionId: string } }>(
-      "/auth/login",
-      { method: "POST", body: JSON.stringify(input) },
-    );
+  login(input: LoginRequest) {
+    return req<AuthResponseDto>("/auth/login", { method: "POST", body: JSON.stringify(input) });
   },
   refresh() {
-    return req<{ accessToken: string; user: { id: string; email: string; role: "student" | "admin"; institutionId: string } }>(
-      "/auth/refresh",
-      { method: "POST" },
-    );
+    return req<AuthResponseDto>("/auth/refresh", { method: "POST" });
   },
   getMe(token: string) {
-    return req<{ id: string; email: string; role: "student" | "admin"; institutionId: string }>("/auth/me", {
+    return req<AuthUserDto>("/auth/me", {
       headers: authHeader(token),
     });
   },
   getAssignments(token: string) {
-    return req<Array<{ id: string; title: string; dueDate: string; status: string }>>("/assignments", {
+    return req<AssignmentListItemDto[]>("/assignments", {
       headers: authHeader(token),
     });
   },
@@ -107,61 +121,44 @@ export const api = {
     if (institutionId) params.set("institutionId", institutionId);
     if (term) params.set("term", term);
     const query = params.toString();
-    return req<Array<{ id: string; code: string; name: string; term: string; institutionId: string }>>(
-      `/courses${query ? `?${query}` : ""}`,
-      { headers: authHeader(token) },
-    );
+    return req<CourseDto[]>(`/courses${query ? `?${query}` : ""}`, { headers: authHeader(token) });
   },
-  createAssignment(token: string, input: { institutionId: string; courseId: string; title: string; dueDate: string }) {
-    return req<{ id: string }>("/assignments", {
+  createAssignment(token: string, input: CreateAssignmentRequest) {
+    return req<AssignmentIdResponse>("/assignments", {
       method: "POST",
       headers: authHeader(token),
       body: JSON.stringify(input),
     });
   },
   getAssignmentLogs(token: string, assignmentId: string) {
-    return req<Array<{ id: string; toolName: string; usagePurpose: string; responseSummary: string }>>(`/assignments/${assignmentId}/ai-logs`, {
+    return req<AiLogListItemDto[]>(`/assignments/${assignmentId}/ai-logs`, {
       headers: authHeader(token),
     });
   },
-  createAssignmentLog(
-    token: string,
-    assignmentId: string,
-    input: {
-      toolName: string;
-      model?: string;
-      usagePurpose: string;
-      promptRaw?: string;
-      responseSummary: string;
-      studentReflection?: string;
-    },
-  ) {
-    return req<{ id: string }>(`/assignments/${assignmentId}/ai-logs`, {
+  createAssignmentLog(token: string, assignmentId: string, input: CreateAiLogRequest) {
+    return req<AssignmentIdResponse>(`/assignments/${assignmentId}/ai-logs`, {
       method: "POST",
       headers: authHeader(token),
       body: JSON.stringify(input),
     });
   },
   getActiveGuidelines(token: string, assignmentId: string) {
-    return req<{ id: string; rules: Array<{ id: string; ruleCode: string; title: string; adviceText: string; severity: string }> }>(
-      `/assignments/${assignmentId}/guidelines/active`,
-      { headers: authHeader(token) },
-    );
+    return req<ActiveGuidelineSetDto>(`/assignments/${assignmentId}/guidelines/active`, { headers: authHeader(token) });
   },
   runCompliance(token: string, assignmentId: string) {
-    return req<{ id: string; result: "ok" | "warning"; findingsJson: unknown }>(`/assignments/${assignmentId}/compliance/check`, {
+    return req<ComplianceCheckDto>(`/assignments/${assignmentId}/compliance/check`, {
       method: "POST",
       headers: authHeader(token),
     });
   },
   generateDeclaration(token: string, assignmentId: string) {
-    return req<{ id: string }>(`/assignments/${assignmentId}/declarations/generate`, {
+    return req<AssignmentIdResponse>(`/assignments/${assignmentId}/declarations/generate`, {
       method: "POST",
       headers: authHeader(token),
     });
   },
   listDeclarations(token: string, assignmentId: string) {
-    return req<Array<{ id: string; createdAt: string }>>(`/assignments/${assignmentId}/declarations`, {
+    return req<DeclarationSummaryDto[]>(`/assignments/${assignmentId}/declarations`, {
       headers: authHeader(token),
     });
   },
@@ -171,56 +168,36 @@ export const api = {
     });
   },
   getPrivacySettings(token: string) {
-    return req<{ storeRawPromptsDefault: boolean; rawPromptRetentionDays: number }>("/privacy/settings", {
+    return req<PrivacySettingsDto>("/privacy/settings", {
       headers: authHeader(token),
     });
   },
-  updatePrivacySettings(token: string, input: { storeRawPromptsDefault?: boolean; rawPromptRetentionDays?: number }) {
-    return req<{ storeRawPromptsDefault: boolean; rawPromptRetentionDays: number }>("/privacy/settings", {
+  updatePrivacySettings(token: string, input: UpdatePrivacySettingsRequest) {
+    return req<PrivacySettingsDto>("/privacy/settings", {
       method: "PATCH",
       headers: authHeader(token),
       body: JSON.stringify(input),
     });
   },
   usageOverTime(token: string) {
-    return req<Array<{ date: string; count: number }>>("/analytics/usage-over-time", {
+    return req<UsageOverTimePointDto[]>("/analytics/usage-over-time", {
       headers: authHeader(token),
     });
   },
   usageByCategory(token: string) {
-    return req<Array<{ usagePurpose: string; count: number }>>("/analytics/usage-by-category", {
+    return req<UsageByCategoryPointDto[]>("/analytics/usage-by-category", {
       headers: authHeader(token),
     });
   },
-  createGuidelineSet(
-    token: string,
-    input: {
-      institutionId: string;
-      scopeType: "institution" | "course" | "assignment";
-      courseId?: string;
-      assignmentId?: string;
-      version: number;
-      sourceType: "seed" | "manual" | "sync";
-      effectiveFrom: string;
-      effectiveTo?: string;
-      rules: Array<{
-        ruleCode: string;
-        title: string;
-        description: string;
-        severity: "info" | "warning" | "high";
-        conditionJson: Record<string, unknown>;
-        adviceText: string;
-      }>;
-    },
-  ) {
-    return req<{ id: string; status: string }>(`/admin/guidelines/sets`, {
+  createGuidelineSet(token: string, input: CreateGuidelineSetRequest) {
+    return req<GuidelineSetSummaryDto>(`/admin/guidelines/sets`, {
       method: "POST",
       headers: authHeader(token),
       body: JSON.stringify(input),
     });
   },
   publishGuidelineSet(token: string, setId: string) {
-    return req<{ id: string; status: string }>(`/admin/guidelines/sets/${setId}/publish`, {
+    return req<GuidelineSetSummaryDto>(`/admin/guidelines/sets/${setId}/publish`, {
       method: "POST",
       headers: authHeader(token),
     });

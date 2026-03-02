@@ -6,6 +6,7 @@ import { RegisterDto } from "./application/register.dto";
 import { LocalAuthProvider } from "./infrastructure/local-auth.provider";
 import * as argon2 from "argon2";
 import { randomUUID } from "crypto";
+import type { AuthRole, JwtAccessPayload } from "./domain/auth.types";
 
 @Injectable()
 export class AuthService {
@@ -89,13 +90,13 @@ export class AuthService {
   private async issueTokens(
     userId: string,
     institutionId: string,
-    role: "student" | "admin",
+    role: AuthRole,
     email: string,
     userAgent?: string,
     ipAddress?: string,
   ) {
     const sessionId = randomUUID();
-    const accessPayload = { sub: userId, institutionId, role, email, sid: sessionId };
+    const accessPayload: JwtAccessPayload = { sub: userId, institutionId, role, email, sid: sessionId };
     const refreshPayload = { sub: userId, sid: sessionId };
 
     const accessToken = await this.jwtService.signAsync(accessPayload, {

@@ -1,25 +1,19 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import type { AuthUserDto } from "@aiguidebook/shared";
 import { api } from "../../lib/api";
 
-type AuthUser = {
-  id: string;
-  email: string;
-  institutionId: string;
-  role: "student" | "admin";
-};
-
 type AuthContextValue = {
-  user: AuthUser | null;
+  user: AuthUserDto | null;
   accessToken: string | null;
   isAuthReady: boolean;
   setAccessToken: (token: string | null) => void;
-  setUser: (user: AuthUser | null) => void;
+  setUser: (user: AuthUserDto | null) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUserDto | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(() => {
     if (typeof window === "undefined") {

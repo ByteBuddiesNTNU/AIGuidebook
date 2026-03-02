@@ -1,13 +1,11 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import type { CourseDto, GuidelineScopeType, RuleSeverity } from "@aiguidebook/shared";
 import { useAuth } from "../../app/providers/auth-provider";
 import { ApiError, api } from "../../lib/api";
 
-type Severity = "info" | "warning" | "high";
-type ScopeType = "institution" | "course" | "assignment";
-
 export function AdminGuidelinesPage() {
   const { accessToken, user } = useAuth();
-  const [scopeType, setScopeType] = useState<ScopeType>("institution");
+  const [scopeType, setScopeType] = useState<GuidelineScopeType>("institution");
   const [courseId, setCourseId] = useState("");
   const [assignmentId, setAssignmentId] = useState("");
   const [version, setVersion] = useState(1);
@@ -17,13 +15,13 @@ export function AdminGuidelinesPage() {
   const [ruleCode, setRuleCode] = useState("CUSTOM-AI-001");
   const [title, setTitle] = useState("New guideline");
   const [description, setDescription] = useState("Describe what this guideline checks.");
-  const [severity, setSeverity] = useState<Severity>("warning");
+  const [severity, setSeverity] = useState<RuleSeverity>("warning");
   const [adviceText, setAdviceText] = useState("Adjust your workflow to comply with guideline policy.");
   const [maxLogs, setMaxLogs] = useState("");
   const [disallowedPurpose, setDisallowedPurpose] = useState("");
   const [requireReflection, setRequireReflection] = useState(false);
 
-  const [courses, setCourses] = useState<Array<{ id: string; code: string; name: string; term: string }>>([]);
+  const [courses, setCourses] = useState<CourseDto[]>([]);
   const [createdSetId, setCreatedSetId] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +123,7 @@ export function AdminGuidelinesPage() {
       <h2>Admin Guidelines</h2>
       <form onSubmit={onCreate}>
         <label>Scope</label>
-        <select value={scopeType} onChange={(e) => setScopeType(e.target.value as ScopeType)}>
+        <select value={scopeType} onChange={(e) => setScopeType(e.target.value as GuidelineScopeType)}>
           <option value="institution">institution</option>
           <option value="course">course</option>
           <option value="assignment">assignment</option>
@@ -173,7 +171,7 @@ export function AdminGuidelinesPage() {
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
 
         <label>Severity</label>
-        <select value={severity} onChange={(e) => setSeverity(e.target.value as Severity)}>
+        <select value={severity} onChange={(e) => setSeverity(e.target.value as RuleSeverity)}>
           <option value="info">info</option>
           <option value="warning">warning</option>
           <option value="high">high</option>

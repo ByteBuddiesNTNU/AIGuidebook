@@ -1,7 +1,9 @@
+import type { AuthRole } from "./auth.types";
+
 export type AuthUser = {
   userId: string;
   institutionId: string;
-  role: "student" | "admin";
+  role: AuthRole;
   email: string;
 };
 

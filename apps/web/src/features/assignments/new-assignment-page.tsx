@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import type { CourseDto } from "@aiguidebook/shared";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/providers/auth-provider";
 import { ApiError, api } from "../../lib/api";
@@ -7,7 +8,7 @@ export function NewAssignmentPage() {
   const navigate = useNavigate();
   const { accessToken, user } = useAuth();
   const [courseId, setCourseId] = useState("");
-  const [courses, setCourses] = useState<Array<{ id: string; code: string; name: string; term: string }>>([]);
+  const [courses, setCourses] = useState<CourseDto[]>([]);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState<string | null>(null);

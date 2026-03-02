@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import type { UsagePurpose } from "@aiguidebook/shared";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../app/providers/auth-provider";
 import { ApiError, api } from "../../lib/api";
@@ -10,7 +11,7 @@ export function NewLogPage() {
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(assignmentId);
   const [assignments, setAssignments] = useState<Array<{ id: string; title: string; dueDate: string; status: string }>>([]);
   const [toolName, setToolName] = useState("");
-  const [usagePurpose, setUsagePurpose] = useState("brainstorming");
+  const [usagePurpose, setUsagePurpose] = useState<UsagePurpose>("brainstorming");
   const [responseSummary, setResponseSummary] = useState("");
   const [promptRaw, setPromptRaw] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export function NewLogPage() {
         <label>Tool name</label>
         <input value={toolName} onChange={(e) => setToolName(e.target.value)} required />
         <label>Purpose</label>
-        <select value={usagePurpose} onChange={(e) => setUsagePurpose(e.target.value)}>
+        <select value={usagePurpose} onChange={(e) => setUsagePurpose(e.target.value as UsagePurpose)}>
           <option value="brainstorming">brainstorming</option>
           <option value="outlining">outlining</option>
           <option value="coding_help">coding_help</option>

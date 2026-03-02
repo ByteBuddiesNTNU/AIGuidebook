@@ -1,25 +1,9 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { GuidelineSetStatus, Prisma, ScopeType } from "@prisma/client";
+import { GuidelineSetStatus, Prisma } from "@prisma/client";
+import type { CreateGuidelineSetRequest } from "@aiguidebook/shared";
 import { PrismaService } from "../../prisma/prisma.service";
 
-type CreateGuidelineSetInput = {
-  institutionId: string;
-  scopeType: ScopeType;
-  courseId?: string;
-  assignmentId?: string;
-  version: number;
-  sourceType: "seed" | "manual" | "sync";
-  effectiveFrom: string;
-  effectiveTo?: string;
-  rules: Array<{
-    ruleCode: string;
-    title: string;
-    description: string;
-    severity: "info" | "warning" | "high";
-    conditionJson: Record<string, unknown>;
-    adviceText: string;
-  }>;
-};
+type CreateGuidelineSetInput = CreateGuidelineSetRequest;
 
 @Injectable()
 export class GuidelinesService {

@@ -6,6 +6,7 @@ import { AuthService } from "./auth.service";
 import { LoginDto } from "./application/login.dto";
 import { RegisterDto } from "./application/register.dto";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import type { JwtAccessPayload } from "./domain/auth.types";
 
 @Controller("auth")
 export class AuthController {
@@ -38,7 +39,7 @@ export class AuthController {
   @Post("logout")
   @UseGuards(JwtAuthGuard)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const user = req.user as { sid?: string };
+    const user = req.user as JwtAccessPayload;
     await this.authService.logout(user?.sid);
     res.clearCookie("refreshToken");
     return { data: { ok: true }, error: null, meta: this.meta() };
@@ -47,7 +48,7 @@ export class AuthController {
   @Get("me")
   @UseGuards(JwtAuthGuard)
   async me(@Req() req: Request) {
-    const user = req.user as { sub: string };
+    const user = req.user as JwtAccessPayload;
     return { data: await this.authService.me(user.sub), error: null, meta: this.meta() };
   }
 
