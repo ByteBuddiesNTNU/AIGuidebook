@@ -1,12 +1,19 @@
-import { Controller, Get, Param, UseGuards } from "@nestjs/common";
+import { Controller, Get, Param } from "@nestjs/common";
 import { randomUUID } from "crypto";
-import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { InstitutionsService } from "./institutions.service";
 
 @Controller("institutions")
-@UseGuards(JwtAuthGuard)
 export class InstitutionsController {
   constructor(private readonly institutionsService: InstitutionsService) {}
+
+  @Get()
+  async findAll() {
+    return {
+      data: await this.institutionsService.findAll(),
+      error: null,
+      meta: { requestId: randomUUID(), timestamp: new Date().toISOString() },
+    };
+  }
 
   @Get(":id")
   async findOne(@Param("id") id: string) {

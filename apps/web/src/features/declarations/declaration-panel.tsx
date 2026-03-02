@@ -1,16 +1,43 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../app/providers/auth-provider";
-import { api } from "../../lib/api";
+import { ApiError, api } from "../../lib/api";
 
 export function DeclarationPanel({ assignmentId }: { assignmentId: string }) {
   const { accessToken } = useAuth();
   const [latestDeclarationId, setLatestDeclarationId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function generate() {
     if (!accessToken) return;
-    const created = await api.generateDeclaration(accessToken, assignmentId);
-    setLatestDeclarationId(created.data.id);
+    setError(null);
+    try {
+      const created = await api.generateDeclaration(accessToken, assignmentId);
+      setLatestDeclarationId(created.data.id);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        return;
+      }
+      setError("Failed to generate declaration.");
+    }
+  }
+
+  async function openPdf() {
+    if (!accessToken || !latestDeclarationId) return;
+    setError(null);
+    try {
+      const blob = await api.getDeclarationPdf(accessToken, latestDeclarationId);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        return;
+      }
+      setError("Failed to open PDF.");
+    }
   }
 
   return (
@@ -19,11 +46,12 @@ export function DeclarationPanel({ assignmentId }: { assignmentId: string }) {
       <button type="button" onClick={generate}>
         Generate declaration PDF
       </button>
+      {error ? <p style={{ color: "#b00020" }}>{error}</p> : null}
       {latestDeclarationId ? (
         <p>
-          <a href={`http://localhost:3000/api/v1/declarations/${latestDeclarationId}/pdf`} target="_blank" rel="noreferrer">
+          <button type="button" onClick={openPdf}>
             Open PDF
-          </a>
+          </button>
         </p>
       ) : null}
       <Link to={`/assignments/${assignmentId}/declaration/preview`}>Preview route</Link>

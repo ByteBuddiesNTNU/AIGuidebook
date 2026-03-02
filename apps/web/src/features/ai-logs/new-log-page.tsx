@@ -1,33 +1,71 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../app/providers/auth-provider";
-import { api } from "../../lib/api";
+import { ApiError, api } from "../../lib/api";
 
 export function NewLogPage() {
   const { assignmentId = "" } = useParams();
   const navigate = useNavigate();
   const { accessToken } = useAuth();
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState(assignmentId);
+  const [assignments, setAssignments] = useState<Array<{ id: string; title: string; dueDate: string; status: string }>>([]);
   const [toolName, setToolName] = useState("");
   const [usagePurpose, setUsagePurpose] = useState("brainstorming");
   const [responseSummary, setResponseSummary] = useState("");
   const [promptRaw, setPromptRaw] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    api
+      .getAssignments(accessToken)
+      .then((resp) => {
+        setAssignments(resp.data);
+        setSelectedAssignmentId((current) => {
+          if (current && resp.data.some((item) => item.id === current)) return current;
+          return resp.data[0]?.id ?? "";
+        });
+      })
+      .catch(() => setAssignments([]));
+  }, [accessToken]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!accessToken) return;
-    await api.createAssignmentLog(accessToken, assignmentId, {
-      toolName,
-      usagePurpose,
-      responseSummary,
-      promptRaw,
-    });
-    navigate(`/assignments/${assignmentId}`);
+    if (!accessToken || !selectedAssignmentId) return;
+    setError(null);
+    try {
+      await api.createAssignmentLog(accessToken, selectedAssignmentId, {
+        toolName,
+        usagePurpose,
+        responseSummary,
+        promptRaw,
+      });
+      navigate(`/assignments/${selectedAssignmentId}`);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        return;
+      }
+      setError("Failed to save log.");
+    }
   }
 
   return (
     <section className="card">
       <h2>New AI Log</h2>
       <form onSubmit={onSubmit}>
+        {error ? <p style={{ color: "#b00020" }}>{error}</p> : null}
+        <label>Assignment</label>
+        <select value={selectedAssignmentId} onChange={(e) => setSelectedAssignmentId(e.target.value)} required>
+          <option value="" disabled>
+            Select assignment
+          </option>
+          {assignments.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.title} ({item.status})
+            </option>
+          ))}
+        </select>
         <label>Tool name</label>
         <input value={toolName} onChange={(e) => setToolName(e.target.value)} required />
         <label>Purpose</label>

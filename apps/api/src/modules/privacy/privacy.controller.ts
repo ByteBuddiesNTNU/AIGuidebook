@@ -1,11 +1,21 @@
 import { Body, Controller, Get, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { Request } from "express";
 import { randomUUID } from "crypto";
+import { Type } from "class-transformer";
+import { IsBoolean, IsInt, IsOptional, Max, Min } from "class-validator";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { PrivacyService } from "./privacy.service";
 
 class UpdatePrivacySettingsDto {
+  @IsOptional()
+  @IsBoolean()
   storeRawPromptsDefault?: boolean;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(3650)
   rawPromptRetentionDays?: number;
 }
 

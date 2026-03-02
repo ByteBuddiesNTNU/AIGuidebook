@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "../../prisma/prisma.service";
 
@@ -29,7 +29,7 @@ export class PrivacyService {
     const current = await this.getSettings(studentId);
     const retention = input.rawPromptRetentionDays ?? current.rawPromptRetentionDays;
     if (retention < 1 || retention > 3650) {
-      throw new Error("Retention days out of range");
+      throw new BadRequestException("Retention days out of range");
     }
 
     return this.prisma.studentPrivacySetting.update({
