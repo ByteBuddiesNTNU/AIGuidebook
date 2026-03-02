@@ -8,7 +8,7 @@ import { ApiError, api } from "../../lib/api";
 export function NewLogPage() {
   const { assignmentId = "" } = useParams();
   const navigate = useNavigate();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(assignmentId);
   const [toolName, setToolName] = useState("");
   const [usagePurpose, setUsagePurpose] = useState<UsagePurpose>("brainstorming");
@@ -16,7 +16,7 @@ export function NewLogPage() {
   const [promptRaw, setPromptRaw] = useState("");
   const [error, setError] = useState<string | null>(null);
   const assignmentsQuery = useQuery({
-    queryKey: ["assignments", accessToken],
+    queryKey: ["assignments", user?.id],
     enabled: Boolean(accessToken),
     queryFn: async (): Promise<AssignmentListItemDto[]> => {
       if (!accessToken) return [];

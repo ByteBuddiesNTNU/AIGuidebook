@@ -53,7 +53,7 @@ export function AdminGuidelinesPage() {
     !!accessToken &&
     !!user &&
     user.role === "admin" &&
-    (scopeType !== "course" || !!courseId) &&
+    (scopeType !== "course" || !!resolvedCourseId) &&
     (scopeType !== "assignment" || !!assignmentId.trim()) &&
     !!effectiveFrom;
 
