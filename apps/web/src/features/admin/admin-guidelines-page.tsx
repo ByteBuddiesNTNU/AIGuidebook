@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { SubmitEvent, useState } from "react";
 import type {
   CourseDto,
   GuidelineScopeType,
@@ -57,7 +57,7 @@ export function AdminGuidelinesPage() {
     (scopeType !== "assignment" || !!assignmentId.trim()) &&
     !!effectiveFrom;
 
-  async function onCreate(event: FormEvent) {
+  async function onCreate(event: SubmitEvent) {
     event.preventDefault();
     if (!accessToken || !user || user.role !== "admin") return;
     if (scopeType === "course" && !resolvedCourseId) {

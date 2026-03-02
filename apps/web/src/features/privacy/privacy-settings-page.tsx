@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { SubmitEvent, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../app/providers/auth-provider";
 import { api } from "../../lib/api";
@@ -36,7 +36,7 @@ export function PrivacySettingsPage() {
     setRawPromptRetentionDays(settingsQuery.data.rawPromptRetentionDays);
   }, [settingsQuery.data]);
 
-  async function onSubmit(event: FormEvent) {
+  async function onSubmit(event: SubmitEvent) {
     event.preventDefault();
     if (!accessToken) return;
     await saveMutation.mutateAsync({

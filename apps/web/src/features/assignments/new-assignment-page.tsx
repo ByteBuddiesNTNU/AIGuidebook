@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { SubmitEvent, useState } from "react";
 import type { CourseDto } from "@aiguidebook/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +28,7 @@ export function NewAssignmentPage() {
         ? courseId
         : (courses[0]?.id ?? "");
 
-  async function onSubmit(event: FormEvent) {
+  async function onSubmit(event: SubmitEvent) {
     event.preventDefault();
     if (!accessToken || !user) return;
     if (!resolvedCourseId) {

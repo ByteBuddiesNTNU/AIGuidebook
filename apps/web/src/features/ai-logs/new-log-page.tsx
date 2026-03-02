@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { SubmitEvent, useState } from "react";
 import type { AssignmentListItemDto, UsagePurpose } from "@aiguidebook/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
@@ -31,7 +31,7 @@ export function NewLogPage() {
         ? selectedAssignmentId
         : (assignments[0]?.id ?? "");
 
-  async function onSubmit(event: FormEvent) {
+  async function onSubmit(event: SubmitEvent) {
     event.preventDefault();
     if (!accessToken || !resolvedAssignmentId) return;
     setError(null);

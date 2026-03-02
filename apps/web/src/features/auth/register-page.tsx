@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { SubmitEvent, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError, api } from "../../lib/api";
@@ -17,7 +17,7 @@ export function RegisterPage() {
   });
   const institutions = institutionsQuery.data ?? [];
 
-  async function onSubmit(event: FormEvent) {
+  async function onSubmit(event: SubmitEvent) {
     event.preventDefault();
     setError(null);
     try {
