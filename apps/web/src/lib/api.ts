@@ -17,6 +17,7 @@ import type {
   PrivacySettingsDto,
   RegisterRequest,
   UpdatePrivacySettingsRequest,
+  JsonValue,
   UsageByCategoryPointDto,
   UsageOverTimePointDto,
 } from "@aiguidebook/shared";
@@ -29,7 +30,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
-    public readonly details?: unknown,
+    public readonly details?: JsonValue,
   ) {
     super(message);
     this.name = "ApiError";
@@ -69,17 +70,17 @@ async function reqBlob(path: string, init?: RequestInit): Promise<Blob> {
 }
 
 async function throwResponseError(response: Response) {
-  let payload: unknown;
+  let payload: JsonValue | undefined;
   try {
-    payload = await response.json();
+    payload = (await response.json()) as JsonValue;
   } catch {
     payload = undefined;
   }
 
   let message = `Request failed: ${response.status}`;
-  if (payload && typeof payload === "object" && "message" in payload) {
-    const rawMessage = (payload as { message?: unknown }).message;
-    if (Array.isArray(rawMessage)) {
+  if (isJsonObject(payload) && "message" in payload) {
+    const rawMessage = payload.message;
+    if (Array.isArray(rawMessage) && rawMessage.every((part) => typeof part === "string")) {
       message = rawMessage.join(", ");
     } else if (typeof rawMessage === "string") {
       message = rawMessage;
@@ -87,6 +88,10 @@ async function throwResponseError(response: Response) {
   }
 
   throw new ApiError(message, response.status, payload);
+}
+
+function isJsonObject(value: JsonValue | undefined): value is { [key: string]: JsonValue } {
+  return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
 function authHeader(token: string | null): Record<string, string> {

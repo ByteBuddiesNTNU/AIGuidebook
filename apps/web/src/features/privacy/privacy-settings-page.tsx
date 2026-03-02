@@ -1,16 +1,18 @@
-import { SubmitEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { SubmitEvent } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../app/providers/auth-provider";
-import { api } from "../../lib/api";
+import { ApiError, api } from "../../lib/api";
 
 export function PrivacySettingsPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [storeRawPromptsDefault, setStoreRawPromptsDefault] = useState(false);
   const [rawPromptRetentionDays, setRawPromptRetentionDays] = useState(180);
   const [status, setStatus] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const settingsQuery = useQuery({
-    queryKey: ["privacy-settings", accessToken],
-    enabled: Boolean(accessToken),
+    queryKey: ["privacy-settings", user?.id],
+    enabled: Boolean(accessToken && user?.id),
     queryFn: async () => {
       if (!accessToken) {
         throw new Error("Missing access token");
@@ -36,14 +38,24 @@ export function PrivacySettingsPage() {
     setRawPromptRetentionDays(settingsQuery.data.rawPromptRetentionDays);
   }, [settingsQuery.data]);
 
-  async function onSubmit(event: SubmitEvent) {
+  async function onSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!accessToken) return;
-    await saveMutation.mutateAsync({
-      storeRawPromptsDefault,
-      rawPromptRetentionDays,
-    });
-    setStatus("Saved");
+    setStatus("");
+    setError(null);
+    try {
+      await saveMutation.mutateAsync({
+        storeRawPromptsDefault,
+        rawPromptRetentionDays,
+      });
+      setStatus("Saved");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        return;
+      }
+      setError("Failed to save settings.");
+    }
   }
 
   return (
@@ -57,6 +69,7 @@ export function PrivacySettingsPage() {
       {settingsQuery.isError ? (
         <p className="error">Failed to load privacy settings.</p>
       ) : null}
+      {error ? <p className="error">{error}</p> : null}
       <form onSubmit={onSubmit}>
         <label>
           <input

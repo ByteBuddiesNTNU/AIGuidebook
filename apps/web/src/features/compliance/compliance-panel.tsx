@@ -1,24 +1,18 @@
 import { useState } from "react";
+import type { ComplianceFindingDto } from "@aiguidebook/shared";
 import { useAuth } from "../../app/providers/auth-provider";
 import { api } from "../../lib/api";
-
-type Finding = {
-  message: string;
-  ruleCode: string;
-  severity: "info" | "warning" | "high";
-  matchedCondition: Record<string, unknown>;
-};
 
 export function CompliancePanel({ assignmentId }: { assignmentId: string }) {
   const { accessToken } = useAuth();
   const [result, setResult] = useState<"ok" | "warning" | "">("");
-  const [findings, setFindings] = useState<Finding[]>([]);
+  const [findings, setFindings] = useState<ComplianceFindingDto[]>([]);
 
   async function runCheck() {
     if (!accessToken) return;
     const resp = await api.runCompliance(accessToken, assignmentId);
     setResult(resp.data.result);
-    setFindings(Array.isArray(resp.data.findingsJson) ? (resp.data.findingsJson as Finding[]) : []);
+    setFindings(resp.data.findingsJson);
   }
 
   return (

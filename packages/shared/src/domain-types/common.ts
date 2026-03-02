@@ -1,7 +1,10 @@
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+
 export type ApiError = {
   code: string;
   message: string;
-  details?: unknown;
+  details?: JsonValue;
 };
 
 export type ApiResponse<T> = {

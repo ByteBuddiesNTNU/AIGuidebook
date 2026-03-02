@@ -1,4 +1,5 @@
-import { SubmitEvent, useState } from "react";
+import { useState } from "react";
+import type { SubmitEvent } from "react";
 import type { AssignmentListItemDto, UsagePurpose } from "@aiguidebook/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
@@ -71,7 +72,15 @@ export function NewLogPage() {
         <label>Tool name</label>
         <input value={toolName} onChange={(e) => setToolName(e.target.value)} required />
         <label>Purpose</label>
-        <select value={usagePurpose} onChange={(e) => setUsagePurpose(e.target.value as UsagePurpose)}>
+        <select
+          value={usagePurpose}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (isUsagePurpose(value)) {
+              setUsagePurpose(value);
+            }
+          }}
+        >
           <option value="brainstorming">brainstorming</option>
           <option value="outlining">outlining</option>
           <option value="coding_help">coding_help</option>
@@ -86,5 +95,17 @@ export function NewLogPage() {
         <button type="submit">Save log</button>
       </form>
     </section>
+  );
+}
+
+function isUsagePurpose(value: string): value is UsagePurpose {
+  return (
+    value === "brainstorming" ||
+    value === "outlining" ||
+    value === "coding_help" ||
+    value === "proofreading" ||
+    value === "translation" ||
+    value === "concept_explanation" ||
+    value === "other"
   );
 }

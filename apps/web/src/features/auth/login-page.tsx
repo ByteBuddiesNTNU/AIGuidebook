@@ -1,6 +1,7 @@
-import { SubmitEvent, useState } from "react";
+import { useState } from "react";
+import type { SubmitEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../../lib/api";
+import { ApiError, api } from "../../lib/api";
 import { useAuth } from "../../app/providers/auth-provider";
 
 export function LoginPage() {
@@ -18,7 +19,11 @@ export function LoginPage() {
       setUser(resp.data.user);
       navigate("/dashboard");
     } catch (err) {
-      setError((err as Error).message);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        return;
+      }
+      setError("Failed to sign in.");
     }
   }
 

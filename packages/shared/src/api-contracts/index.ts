@@ -97,7 +97,7 @@ export type ActiveGuidelineSetDto = {
 export type ComplianceCheckDto = {
   id: string;
   result: "ok" | "warning";
-  findingsJson: unknown;
+  findingsJson: ComplianceFindingDto[];
 };
 
 export type DeclarationSummaryDto = {
@@ -128,13 +128,26 @@ export type UsageByCategoryPointDto = {
 export type GuidelineScopeType = "institution" | "course" | "assignment";
 export type GuidelineSourceType = "seed" | "manual" | "sync";
 export type RuleSeverity = "info" | "warning" | "high";
+export type GuidelineCondition = {
+  maxLogs?: number;
+  actualLogs?: number;
+  disallowedPurpose?: string;
+  requireReflection?: boolean;
+};
+
+export type ComplianceFindingDto = {
+  message: string;
+  ruleCode: string;
+  severity: RuleSeverity;
+  matchedCondition: GuidelineCondition;
+};
 
 export type CreateGuidelineRuleRequest = {
   ruleCode: string;
   title: string;
   description: string;
   severity: RuleSeverity;
-  conditionJson: Record<string, unknown>;
+  conditionJson: GuidelineCondition;
   adviceText: string;
 };
 

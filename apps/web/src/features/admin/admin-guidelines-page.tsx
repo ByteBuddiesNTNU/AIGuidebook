@@ -1,6 +1,8 @@
-import { SubmitEvent, useState } from "react";
+import { useState } from "react";
+import type { SubmitEvent } from "react";
 import type {
   CourseDto,
+  GuidelineCondition,
   GuidelineScopeType,
   RuleSeverity,
 } from "@aiguidebook/shared";
@@ -67,7 +69,7 @@ export function AdminGuidelinesPage() {
     setError(null);
     setStatus("");
 
-    const conditionJson: Record<string, unknown> = {};
+    const conditionJson: GuidelineCondition = {};
     if (maxLogs.trim()) {
       conditionJson.maxLogs = Number(maxLogs);
     }
@@ -144,7 +146,12 @@ export function AdminGuidelinesPage() {
         <label>Scope</label>
         <select
           value={scopeType}
-          onChange={(e) => setScopeType(e.target.value as GuidelineScopeType)}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (isGuidelineScopeType(value)) {
+              setScopeType(value);
+            }
+          }}
         >
           <option value="institution">institution</option>
           <option value="course">course</option>
@@ -232,7 +239,12 @@ export function AdminGuidelinesPage() {
         <label>Severity</label>
         <select
           value={severity}
-          onChange={(e) => setSeverity(e.target.value as RuleSeverity)}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (isRuleSeverity(value)) {
+              setSeverity(value);
+            }
+          }}
         >
           <option value="info">info</option>
           <option value="warning">warning</option>
@@ -288,4 +300,12 @@ export function AdminGuidelinesPage() {
       {error ? <p className="error">{error}</p> : null}
     </section>
   );
+}
+
+function isGuidelineScopeType(value: string): value is GuidelineScopeType {
+  return value === "institution" || value === "course" || value === "assignment";
+}
+
+function isRuleSeverity(value: string): value is RuleSeverity {
+  return value === "info" || value === "warning" || value === "high";
 }
