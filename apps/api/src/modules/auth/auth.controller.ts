@@ -14,24 +14,24 @@ export class AuthController {
   @Post("register")
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
-    const tokens = await this.authService.register(dto);
-    this.setRefreshCookie(res, tokens.refreshToken);
+    const { refreshToken, ...tokens } = await this.authService.register(dto);
+    this.setRefreshCookie(res, refreshToken);
     return { data: tokens, error: null, meta: this.meta() };
   }
 
   @Post("login")
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const tokens = await this.authService.login(dto, req.headers["user-agent"], req.ip);
-    this.setRefreshCookie(res, tokens.refreshToken);
+    const { refreshToken, ...tokens } = await this.authService.login(dto, req.headers["user-agent"], req.ip);
+    this.setRefreshCookie(res, refreshToken);
     return { data: tokens, error: null, meta: this.meta() };
   }
 
   @Post("refresh")
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies?.refreshToken;
-    const tokens = await this.authService.refresh(token);
-    this.setRefreshCookie(res, tokens.refreshToken);
+    const { refreshToken, ...tokens } = await this.authService.refresh(token);
+    this.setRefreshCookie(res, refreshToken);
     return { data: tokens, error: null, meta: this.meta() };
   }
 
