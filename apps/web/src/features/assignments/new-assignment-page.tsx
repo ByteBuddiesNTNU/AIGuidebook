@@ -1,5 +1,6 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { CourseDto } from "@aiguidebook/shared";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/providers/auth-provider";
 import { ApiError, api } from "../../lib/api";
@@ -8,33 +9,37 @@ export function NewAssignmentPage() {
   const navigate = useNavigate();
   const { accessToken, user } = useAuth();
   const [courseId, setCourseId] = useState("");
-  const [courses, setCourses] = useState<CourseDto[]>([]);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!accessToken || !user) return;
-    api
-      .getCourses(accessToken, user.institutionId)
-      .then((resp) => {
-        setCourses(resp.data);
-        setCourseId((current) => current || resp.data[0]?.id || "");
-      })
-      .catch(() => {
-        setCourses([]);
-        setCourseId("");
-      });
-  }, [accessToken, user]);
+  const coursesQuery = useQuery({
+    queryKey: ["courses", user?.institutionId],
+    enabled: Boolean(accessToken && user?.institutionId),
+    queryFn: async (): Promise<CourseDto[]> => {
+      if (!accessToken || !user) return [];
+      return (await api.getCourses(accessToken, user.institutionId)).data;
+    },
+  });
+  const courses = coursesQuery.data ?? [];
+  const resolvedCourseId =
+    courses.length === 0
+      ? ""
+      : courseId && courses.some((course) => course.id === courseId)
+        ? courseId
+        : (courses[0]?.id ?? "");
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!accessToken || !user) return;
+    if (!resolvedCourseId) {
+      setError("Please select a course.");
+      return;
+    }
     setError(null);
     try {
       const resp = await api.createAssignment(accessToken, {
         institutionId: user.institutionId,
-        courseId: courseId.trim(),
+        courseId: resolvedCourseId,
         title: title.trim(),
         dueDate,
       });
@@ -54,9 +59,13 @@ export function NewAssignmentPage() {
       <form onSubmit={onSubmit}>
         {error ? <p style={{ color: "#b00020" }}>{error}</p> : null}
         <label>Course</label>
-        <select value={courseId} onChange={(e) => setCourseId(e.target.value)} required>
+        <select
+          value={resolvedCourseId}
+          onChange={(e) => setCourseId(e.target.value)}
+          required
+        >
           <option value="" disabled>
-            Select course
+            {coursesQuery.isLoading ? "Loading courses..." : "Select course"}
           </option>
           {courses.map((course) => (
             <option key={course.id} value={course.id}>
@@ -65,9 +74,19 @@ export function NewAssignmentPage() {
           ))}
         </select>
         <label>Title</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} minLength={3} required />
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          minLength={3}
+          required
+        />
         <label>Due Date</label>
-        <input value={dueDate} onChange={(e) => setDueDate(e.target.value)} type="date" required />
+        <input
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          type="date"
+          required
+        />
         <button type="submit">Save</button>
       </form>
     </section>

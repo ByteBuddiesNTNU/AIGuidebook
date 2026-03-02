@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError, api } from "../../lib/api";
 import { useAuth } from "../../app/providers/auth-provider";
@@ -7,17 +8,14 @@ export function RegisterPage() {
   const navigate = useNavigate();
   const { setAccessToken, setUser } = useAuth();
   const [institutionId, setInstitutionId] = useState("");
-  const [institutions, setInstitutions] = useState<Array<{ id: string; name: string; code: string }>>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    api
-      .getInstitutions()
-      .then((resp) => setInstitutions(resp.data))
-      .catch(() => setInstitutions([]));
-  }, []);
+  const institutionsQuery = useQuery({
+    queryKey: ["institutions"],
+    queryFn: async () => (await api.getInstitutions()).data,
+  });
+  const institutions = institutionsQuery.data ?? [];
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -41,9 +39,15 @@ export function RegisterPage() {
       <h2>Register</h2>
       <form onSubmit={onSubmit}>
         <label>Institution</label>
-        <select value={institutionId} onChange={(e) => setInstitutionId(e.target.value)} required>
+        <select
+          value={institutionId}
+          onChange={(e) => setInstitutionId(e.target.value)}
+          required
+        >
           <option value="" disabled>
-            Select institution
+            {institutionsQuery.isLoading
+              ? "Loading institutions..."
+              : "Select institution"}
           </option>
           {institutions.map((institution) => (
             <option key={institution.id} value={institution.id}>
@@ -52,9 +56,20 @@ export function RegisterPage() {
           ))}
         </select>
         <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          type="email"
+          required
+        />
         <label>Password</label>
-        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" minLength={10} required />
+        <input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          type="password"
+          minLength={10}
+          required
+        />
         {error ? <p className="error">{error}</p> : null}
         <button type="submit">Create account</button>
       </form>
