@@ -24,26 +24,11 @@ async function req<T>(path: string, init?: RequestInit): Promise<Envelope<T>> {
     credentials: "include",
     headers,
   });
+
   if (!response.ok) {
-    let payload: unknown;
-    try {
-      payload = await response.json();
-    } catch {
-      payload = undefined;
-    }
-
-    let message = `Request failed: ${response.status}`;
-    if (payload && typeof payload === "object" && "message" in payload) {
-      const rawMessage = (payload as { message?: unknown }).message;
-      if (Array.isArray(rawMessage)) {
-        message = rawMessage.join(", ");
-      } else if (typeof rawMessage === "string") {
-        message = rawMessage;
-      }
-    }
-
-    throw new ApiError(message, response.status, payload);
+    await throwResponseError(response);
   }
+
   return response.json() as Promise<Envelope<T>>;
 }
 
@@ -54,27 +39,31 @@ async function reqBlob(path: string, init?: RequestInit): Promise<Blob> {
   });
 
   if (!response.ok) {
-    let payload: unknown;
-    try {
-      payload = await response.json();
-    } catch {
-      payload = undefined;
-    }
-
-    let message = `Request failed: ${response.status}`;
-    if (payload && typeof payload === "object" && "message" in payload) {
-      const rawMessage = (payload as { message?: unknown }).message;
-      if (Array.isArray(rawMessage)) {
-        message = rawMessage.join(", ");
-      } else if (typeof rawMessage === "string") {
-        message = rawMessage;
-      }
-    }
-
-    throw new ApiError(message, response.status, payload);
+    await throwResponseError(response);
   }
 
   return response.blob();
+}
+
+async function throwResponseError(response: Response) {
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = undefined;
+  }
+
+  let message = `Request failed: ${response.status}`;
+  if (payload && typeof payload === "object" && "message" in payload) {
+    const rawMessage = (payload as { message?: unknown }).message;
+    if (Array.isArray(rawMessage)) {
+      message = rawMessage.join(", ");
+    } else if (typeof rawMessage === "string") {
+      message = rawMessage;
+    }
+  }
+
+  throw new ApiError(message, response.status, payload);
 }
 
 function authHeader(token: string | null): Record<string, string> {
