@@ -19,14 +19,13 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("aiguidebook.access_token");
-    if (saved) {
-      setAccessToken(saved);
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
     }
-  }, []);
+
+    return localStorage.getItem("aiguidebook.access_token");
+  });
 
   useEffect(() => {
     if (!accessToken) {
