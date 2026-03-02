@@ -97,6 +97,12 @@ export const api = {
       { method: "POST", body: JSON.stringify(input) },
     );
   },
+  refresh() {
+    return req<{ accessToken: string; user: { id: string; email: string; role: "student" | "admin"; institutionId: string } }>(
+      "/auth/refresh",
+      { method: "POST" },
+    );
+  },
   getMe(token: string) {
     return req<{ id: string; email: string; role: "student" | "admin"; institutionId: string }>("/auth/me", {
       headers: authHeader(token),
