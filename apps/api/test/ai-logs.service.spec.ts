@@ -1,6 +1,10 @@
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { AiLogsService } from "../src/modules/ai-logs/ai-logs.service";
 
+// Traceability notes:
+// TC1/FR1: logging AI usage for assignment
+// TC3/FR3: usage purpose categorization is stored
+// TC10/NFR1: unauthorized data access is denied
 describe("AiLogsService", () => {
   const prisma = {
     assignment: { findUnique: jest.fn() },
@@ -19,7 +23,7 @@ describe("AiLogsService", () => {
     jest.clearAllMocks();
   });
 
-  it("creates a log and stores raw prompt when assignment override is true", async () => {
+  it("[TC1][FR1] creates a log and stores raw prompt when assignment override is true", async () => {
     prisma.assignment.findUnique.mockResolvedValue({
       id: "a1",
       studentId: "u1",
@@ -54,7 +58,7 @@ describe("AiLogsService", () => {
     );
   });
 
-  it("creates a log and strips raw prompt when no override and privacy default false", async () => {
+  it("[TC3][FR3] creates a log and stores usage purpose category while stripping raw prompt by privacy rules", async () => {
     prisma.assignment.findUnique.mockResolvedValue({
       id: "a1",
       studentId: "u1",
@@ -77,6 +81,7 @@ describe("AiLogsService", () => {
     expect(prisma.aIInteractionLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
+          usagePurpose: "debug",
           rawPromptStored: false,
           promptRaw: null,
         }),
@@ -90,7 +95,7 @@ describe("AiLogsService", () => {
     await expect(service.create("u1", "missing", {} as any)).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("throws ForbiddenException when create assignment owner differs", async () => {
+  it("[TC10][NFR1] throws ForbiddenException when create assignment owner differs", async () => {
     prisma.assignment.findUnique.mockResolvedValue({
       id: "a1",
       studentId: "owner",
@@ -102,7 +107,7 @@ describe("AiLogsService", () => {
     await expect(service.create("u1", "a1", {} as any)).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it("lists logs by assignment for owner", async () => {
+  it("[TC7][FR7] lists AI logs scoped by assignment for owner", async () => {
     prisma.assignment.findUnique.mockResolvedValue({
       id: "a1",
       studentId: "u1",

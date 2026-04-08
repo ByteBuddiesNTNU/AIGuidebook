@@ -1,5 +1,8 @@
 import { AnalyticsService } from "../src/modules/analytics/analytics.service";
 
+// Traceability notes:
+// TC9/FR9: aggregated anonymized usage statistics.
+// TC3/FR3: usage category aggregation.
 describe("AnalyticsService", () => {
   const prisma = {
     aIInteractionLog: {
@@ -58,7 +61,7 @@ describe("AnalyticsService", () => {
     );
   });
 
-  it("groups usage by category", async () => {
+  it("[TC3][FR3] groups usage by category", async () => {
     prisma.aIInteractionLog.findMany.mockResolvedValue([
       { usagePurpose: "research" },
       { usagePurpose: "research" },
@@ -71,6 +74,26 @@ describe("AnalyticsService", () => {
       { usagePurpose: "research", count: 2 },
       { usagePurpose: "summarize", count: 1 },
     ]);
+  });
+
+  it("[TC9][FR9] returns anonymized aggregated points without personal identifiers", async () => {
+    prisma.aIInteractionLog.findMany.mockResolvedValue([
+      { createdAt: new Date("2026-03-01T09:00:00.000Z"), usagePurpose: "research" },
+      { createdAt: new Date("2026-03-01T11:00:00.000Z"), usagePurpose: "debug" },
+    ]);
+
+    const timeSeries = await service.usageOverTime("s1");
+    const categories = await service.usageByCategory("s1");
+
+    expect(timeSeries).toEqual([{ date: "2026-03-01", count: 2 }]);
+    expect(categories).toEqual([
+      { usagePurpose: "research", count: 1 },
+      { usagePurpose: "debug", count: 1 },
+    ]);
+    for (const point of [...timeSeries, ...categories]) {
+      expect(point).not.toHaveProperty("studentId");
+      expect(point).not.toHaveProperty("assignmentId");
+    }
   });
 
   it("returns empty category aggregation and applies date filters", async () => {

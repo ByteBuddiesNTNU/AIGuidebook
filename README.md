@@ -28,3 +28,16 @@ Monorepo for a student-facing AI usage guidebook platform.
    - `pnpm dev`
 
 API runs on `http://localhost:3000/api/v1` and web on `http://localhost:5173`.
+
+## Testing
+- Run all tests in the monorepo:
+  - `pnpm test`
+- Run API tests only (Jest):
+  - `pnpm --filter @aiguidebook/api test`
+- Run web tests only (Vitest):
+  - `pnpm --filter @aiguidebook/web test`
+- Run API tests with coverage:
+  - `pnpm --filter @aiguidebook/api test:cov`
+
+Test traceability and requirement mapping are documented in:
+- `apps/api/test/README.md`

@@ -11,6 +11,8 @@ import { NotFoundException } from "@nestjs/common";
 import { mkdirSync, writeFileSync } from "fs";
 import { DeclarationsService } from "../src/modules/declarations/declarations.service";
 
+// Traceability note:
+// TC2/FR2: declaration generation from logged usage.
 describe("DeclarationsService", () => {
   const prisma = {
     assignment: { findUnique: jest.fn() },
@@ -30,7 +32,7 @@ describe("DeclarationsService", () => {
     jest.restoreAllMocks();
   });
 
-  it("generates declaration, renders PDF, writes file and persists declaration", async () => {
+  it("[TC2][FR2] generates declaration, renders PDF, writes file and persists declaration", async () => {
     prisma.assignment.findUnique.mockResolvedValue({
       id: "a1",
       title: "Essay",

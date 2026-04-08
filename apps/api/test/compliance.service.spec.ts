@@ -2,6 +2,9 @@ import { NotFoundException } from "@nestjs/common";
 import { ComplianceResult } from "@prisma/client";
 import { ComplianceService } from "../src/modules/compliance/compliance.service";
 
+// Traceability notes:
+// TC5/FR5: compliance feedback based on rule engine.
+// TC10/NFR1: unauthorized access checks.
 describe("ComplianceService", () => {
   const prisma = {
     assignment: { findUnique: jest.fn() },
@@ -21,7 +24,7 @@ describe("ComplianceService", () => {
     await expect(service.checkAssignment("s1", "a1")).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("throws NotFoundException when assignment belongs to another student", async () => {
+  it("[TC10][NFR1] throws NotFoundException when assignment belongs to another student", async () => {
     prisma.assignment.findUnique.mockResolvedValue({
       id: "a1",
       studentId: "other",
@@ -53,7 +56,7 @@ describe("ComplianceService", () => {
     expect(prisma.complianceCheck.create).not.toHaveBeenCalled();
   });
 
-  it("creates warning compliance result when rule conditions are matched", async () => {
+  it("[TC5][FR5] creates warning compliance result when rule conditions are matched", async () => {
     prisma.assignment.findUnique.mockResolvedValue({
       id: "a1",
       institutionId: "i1",

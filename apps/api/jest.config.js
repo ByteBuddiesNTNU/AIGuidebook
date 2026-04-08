@@ -11,12 +11,14 @@ module.exports = {
     "src/modules/declarations/declarations.service.ts",
     "src/modules/compliance/compliance.service.ts",
     "src/modules/analytics/analytics.service.ts",
+    "src/modules/guidelines/guidelines.service.ts",
+    "src/modules/privacy/privacy.service.ts",
   ],
   coveragePathIgnorePatterns: ["/node_modules/", "/dist/", "/prisma/"],
   coverageDirectory: "<rootDir>/coverage",
   coverageThreshold: {
     global: {
-      lines: 60,
+      lines: 65,
       branches: 70,
       functions: 80,
       statements: 60,

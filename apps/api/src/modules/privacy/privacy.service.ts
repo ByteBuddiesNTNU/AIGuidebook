@@ -43,15 +43,56 @@ export class PrivacyService {
 
   async exportMetadata(studentId: string) {
     const [assignments, logs, declarations] = await Promise.all([
-      this.prisma.assignment.count({ where: { studentId, deletedAt: null } }),
-      this.prisma.aIInteractionLog.count({ where: { studentId, deletedAt: null } }),
-      this.prisma.declaration.count({ where: { studentId } }),
+      this.prisma.assignment.findMany({
+        where: { studentId, deletedAt: null },
+        select: {
+          id: true,
+          courseId: true,
+          title: true,
+          dueDate: true,
+          status: true,
+          storeRawPromptsOverride: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      }),
+      this.prisma.aIInteractionLog.findMany({
+        where: { studentId, deletedAt: null },
+        select: {
+          id: true,
+          assignmentId: true,
+          toolName: true,
+          model: true,
+          usagePurpose: true,
+          promptRaw: true,
+          responseSummary: true,
+          studentReflection: true,
+          rawPromptStored: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      }),
+      this.prisma.declaration.findMany({
+        where: { studentId },
+        select: {
+          id: true,
+          assignmentId: true,
+          version: true,
+          payloadJson: true,
+          pdfUrlOrPath: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      }),
     ]);
+
     return {
       studentId,
       generatedAt: new Date().toISOString(),
-      counts: { assignments, logs, declarations },
-      note: "Self-service data export payload generation can be added in a later milestone.",
+      counts: { assignments: assignments.length, logs: logs.length, declarations: declarations.length },
+      data: { assignments, logs, declarations },
     };
   }
 
